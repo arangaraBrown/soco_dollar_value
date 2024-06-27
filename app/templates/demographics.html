@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demographics</title>
+    {{ css_style|safe }}
+
+</head>
+<body>
+    <form action="{{ redirect_url }}" method="POST">
+
+        <p>Please select your wage type: | कृपया अपना वेतन प्रकार चुनें: | कृपया तुमचा पगार प्रकार निवडा:</p>
+        <select name="wage_type" id="wage_type" required>
+            <option value="0">Daily Wage | दैनिक मजदूरी | दैनिक कामगारी</option>
+            <option value="1">Monthly Net Wage | मासिक नेट मजदूरी | मासिक नेट कामगारी</option>
+            <option value="2">Monthly Gross Wage | मासिक ग्रॉस मजदूरी | मासिक ग्रॉस कामगारी</option>
+        </select><br>
+
+        <p id="wage_question_text">Please enter your wage in INR, using the wage type you just selected above: | कृपया अपनी मजदूरी को INR में दर्ज करें, ऊपर चुने गए मजदूरी प्रकार का उपयोग करते हुए: | कृपया तुमची मजूरी INR मध्ये प्रविष्ट करा, वरील निवडलेल्या मजूरी प्रकाराचा वापर करून:</p>
+        <input type="number" name="wage" placeholder="Enter wage" required><br>
+
+        <p>Please enter your age: | कृपया अपनी उम्र दर्ज करें: | कृपया तुमचे वय प्रविष्ट करा:</p>
+        <input type="number" name="age" placeholder="Enter your age" required><br>
+
+        <p>Please select your gender: | कृपया अपना लिंग चुनें: | कृपया तुमचे लिंग निवडा:</p>
+        <select name="gender" required>
+            <option value="0">Female | महिला | स्त्री</option>
+            <option value="1">Male | पुरुष | पुरुष</option>
+            <option value="2">Transgender | ट्रांसजेंडर | ट्रान्सजेंडर</option>
+            <option value="3">Non-binary / Gender non-conforming | नॉन-बाइनरी / लिंग गैर-अनुरूप | नॉन-बायनरी / लिंग गैर-अनुरूप</option>
+            <option value="4">Prefer not to say | कहना पसंद नहीं करते | न सांगणे पसंत करा</option>
+        </select><br>
+
+        <p>Please select your industry: | कृपया अपना उद्योग चुनें: | कृपया तुमचा उद्योग निवडा:</p>
+        <select name="industry" required>
+            <option value="0">Construction | निर्माण | बांधकाम</option>
+            <option value="1">Manufacturing | उत्पादन | उत्पादन</option>
+            <option value="2">Automotive Manufacturing | ऑटोमोटिव निर्माण | ऑटोमोटिव उत्पादन</option>
+            <option value="3">Food Catering | खाद्य कैटरिंग | खाद्य पुरवठा</option>
+            <option value="4">Other | अन्य | इतर</option>
+        </select><br>
+
+        <p>Which WFC are you taking this survey at?: | आप किस WFC में यह सर्वेक्षण कर रहे हैं?: | तुम्ही कोणत्या WFC मध्ये हे सर्वेक्षण घेत आहात?:</p>
+        <select name="location" required>
+            <option value="chakan">Chakan | चाकन | चाकण</option>
+            <option value="bhosari">Bhosari | भोसरी | भोसरी</option>
+            <option value="vatva">Vatva | वटवा | वटवा</option>
+            <option value="savli">Savli | सावली | सावली</option>
+            <option value="ahmedabad">Ahmedabad | अहमदाबाद | अहमदाबाद</option>
+        </select><br>
+
+        <p>State of Origin: | मूल राज्य: | मूळ राज्य:</p>
+            <select name="state">
+                <option value="Andhra Pradesh">Andhra Pradesh | आंध्र प्रदेश | आंध्र प्रदेश</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh | अरुणाचल प्रदेश | अरुणाचल प्रदेश</option>
+                <option value="Assam">Assam | असम | आसाम</option>
+                <option value="Bihar">Bihar | बिहार | बिहार</option>
+                <option value="Chhattisgarh">Chhattisgarh | छत्तीसगढ़ | छत्तीसगड</option>
+                <option value="Goa">Goa | गोवा | गोवा</option>
+                <option value="Gujarat">Gujarat | गुजरात | गुजरात</option>
+                <option value="Haryana">Haryana | हरियाणा | हरियाणा</option>
+                <option value="Himachal Pradesh">Himachal Pradesh | हिमाचल प्रदेश | हिमाचल प्रदेश</option>
+                <option value="Jharkhand">Jharkhand | झारखंड | झारखंड</option>
+                <option value="Karnataka">Karnataka | कर्नाटक | कर्नाटक</option>
+                <option value="Kerala">Kerala | केरल | केरळ</option>
+                <option value="Madhya Pradesh">Madhya Pradesh | मध्य प्रदेश | मध्य प्रदेश</option>
+                <option value="Maharashtra">Maharashtra | महाराष्ट्र | महाराष्ट्र</option>
+                <option value="Manipur">Manipur | मणिपुर | मणिपूर</option>
+                <option value="Meghalaya">Meghalaya | मेघालय | मेघालय</option>
+                <option value="Mizoram">Mizoram | मिजोरम | मिझोरम</option>
+                <option value="Nagaland">Nagaland | नागालैंड | नागालँड</option>
+                <option value="Odisha">Odisha | ओडिशा | ओडिशा</option>
+                <option value="Punjab">Punjab | पंजाब | पंजाब</option>
+                <option value="Rajasthan">Rajasthan | राजस्थान | राजस्थान</option>
+                <option value="Sikkim">Sikkim | सिक्किम | सिक्कीम</option>
+                <option value="Tamil Nadu">Tamil Nadu | तमिलनाडु | तमिळनाडू</option>
+                <option value="Telangana">Telangana | तेलंगाना | तेलंगणा</option>
+                <option value="Tripura">Tripura | त्रिपुरा | त्रिपुरा</option>
+                <option value="Uttar Pradesh">Uttar Pradesh | उत्तर प्रदेश | उत्तर प्रदेश</option>
+                <option value="Uttarakhand">Uttarakhand | उत्तराखंड | उत्तराखंड</option>
+                <option value="West Bengal">West Bengal | पश्चिम बंगाल | पश्चिम बंगाल</option>
+            </select><br>
+        </div>
+
+        <p>Do you live alone or with family?: | क्या आप अकेले या परिवार के साथ रहते हैं?: | तुम्ही एकटे किंवा कुटुंबासह राहता का?:</p>
+            <select name="alone_or_family">
+                <option value="alone">Alone | अकेले | एकटे</option>
+                <option value="with_family">With Family | परिवार के साथ | कुटुंबासह</option>
+            </select><br>
+        </div>
+        
+        <p>Which language would you like to display the rest of the survey in?: | आप बाकी सर्वेक्षण किस भाषा में देखना चाहेंगे?: | तुम्हाला उर्वरित सर्वेक्षण कोणत्या भाषेत प्रदर्शित करायचे आहे?:</p>
+        <select name="lang" required>
+            <option value="1">English | अंग्रेज़ी | इंग्रजी</option>
+            <option value="2">Hindi | हिंदी | हिंदी</option>
+            <option value="3">Marathi | मराठी | मराठी</option>
+        </select><br>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

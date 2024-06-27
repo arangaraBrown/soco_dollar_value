@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="icon" type="image/png" href="https://tt-econ.github.io/assets/images/tt.png">
+    <!-- If no favicon -> Need to suppress request for favicon.ico below to avoid 403 error -->
+    <!-- <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo="> -->
+
+    <!--
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    -->
+    <!-- Static folder is not accessible by AWS Lambda, the content is saved as a Python variable instead -->
+    {{ css_style }}
+</head>
+
+<body>
+    <div class="question-box">
+        <h1>Thank you for your response!</h1>
+        <p> Your estimates are shown below:{{ estimates }}</p>
+    </div>
+</body>
+
+</html>
