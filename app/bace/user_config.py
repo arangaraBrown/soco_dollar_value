@@ -33,8 +33,8 @@ answers      = [0, 1]           # All possible answers that can be observed. Doe
 # All entries must have a .rvs() and .log_pdf() method
 # See https://docs.scipy.org/doc/scipy/reference/stats.html
 theta_params = dict(
-    WTP_1 = scipy.stats.uniform(0.02,0.18),
-    WTP_2 = scipy.stats.uniform(0.02,0.18),
+    WTP_1 = scipy.stats.uniform(0,0.4),
+    WTP_2 = scipy.stats.uniform(0,0.4),
     p = scipy.stats.uniform()
 )
 
