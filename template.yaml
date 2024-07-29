@@ -66,21 +66,6 @@ Resources:
           Properties:
             Path: /random_design
             Method: get
-        SurveyGet:
-          Type: Api
-          Properties:
-            Path: /survey
-            Method: get
-        SurveyPost:
-          Type: Api
-          Properties:
-            Path: /survey
-            Method: post
-        Instructions:
-          Type: Api
-          Properties:
-            Path: /instructions
-            Method: get
     Metadata:
       Dockerfile: Dockerfile
       DockerContext: ./app

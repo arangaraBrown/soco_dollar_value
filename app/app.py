@@ -14,8 +14,6 @@ from bace.design_optimization import get_design_tuner, get_next_design, get_conf
 from bace.pmc_inference import pmc, sample_thetas
 from bace.user_config import answers, design_params, theta_params, likelihood_pdf, author, size_thetas, conf_dict, max_opt_time
 from bace.user_convert import add_to_profile, convert_design
-from bace.user_survey import nquestions, display_estimates
-from static.style import css_style
 
 # Prepare application for Lambda environment
 from utils.flask_lambda.flask_lambda import FlaskLambda
@@ -108,10 +106,8 @@ def create_profile():
 
     response = {
         'profile_id': profile.get('profile_id'),
-        'param_id_1': profile.get('param_id_1'),
-        'param_id_2': profile.get('param_id_2'),
-        'param_1': profile.get('param_1'),
-        'param_2': profile.get('param_2'),
+        'param_id': profile.get('param_id_1'),
+        'param': profile.get('param_1'),
         **output_design
     }
 
@@ -233,132 +229,6 @@ def update_estimates():
         estimates = thetas.agg(['mean', 'median', 'std']).to_dict()
         # Return sample output
         return format_response(estimates)
-
-@app.route('/instructions', methods=["GET"])
-def instructions():
-    css_style_markup = Markup(f'<style>{css_style}</style>')
-    return render_template('instructions.html', redirect_url='survey', css_style=css_style_markup)
-
-@app.route('/survey', methods=["GET", "POST"])
-def survey():
-    css_style_markup = Markup(f'<style>{css_style}</style>')
-
-    if request.method == 'GET':
-        return render_template('demographics.html', redirect_url='survey', css_style=css_style_markup)
-    else:
-
-        # Store body of request
-        profile = get_request(request)
-
-        if profile.get('profile_id'):
-
-            # Store profile specific information
-            request_data = get_request(request)
-
-            # Store profile key value
-            key={'profile_id': request_data.get('profile_id')}
-
-            # Retrieve profile from database
-            profile = table.get_item(Key=key)['Item']
-            profile = decimal_to_float(profile)           
-
-            # Modify the tuner to use the participant's current wage
-            current_wage = float(profile['wage'])
-            wage_design_distribution = create_wage_distribution(current_wage, profile['wage_type'])
-            design_params['wage_a'] = wage_design_distribution
-            design_params['wage_b'] = wage_design_distribution
-            design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
     
-            answer=request_data.get('answer')
-            profile['answer_history'].append(answer)
-            print(profile)
-
-            # Compute pmc to get posterior distribution after answer
-            thetas = pmc(theta_params, profile['answer_history'], profile['design_history'], likelihood_pdf, size_thetas)
-
-            if len(profile['design_history']) + 1 <= nquestions:
-
-                # Compute next design
-                next_design = get_next_design(thetas, design_tuner)
-
-                # Update item
-                profile['design_history'].append(next_design)
-
-                # Store updates
-                updates = {
-                    'design_history': profile.get('design_history'),
-                    'answer_history': profile.get('answer_history')
-                }
-
-                # Push changes to database
-                update_db_item(table, key, updates)
-
-                # Convert Next Design
-                profile['question_number'] = 'survey'
-                output_design = convert_design(next_design, profile, profile)
-
-                inputs = {'profile_id': profile['profile_id']}
-
-                return render_template('survey.html', output_design=output_design, inputs=inputs, question_number=len(profile.get("design_history")), nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
-
-            else:
-
-                estimates = thetas.agg(['mean', 'median', 'std'])
-
-                # Store values to be updated
-                updates = {
-                    'answer_history': profile.get('answer_history'),
-                    'estimates': estimates.to_dict()
-                }
-
-                # Push changes to database
-                update_db_item(table, key, updates)
-
-                if display_estimates:
-                    # calculate the mean and median of the dataframe using agg()
-                    result_df = estimates.transpose()
-
-                    # add the parameter names as a separate column
-                    result_df['Parameter'] = result_df.index
-
-                    # reorder the columns then rename
-                    result_df = result_df[['Parameter', 'mean', 'median', 'std']]
-                    result_df.columns = ['Parameter', 'Mean', 'Median', 'Std']
-
-                    # convert the dataframe into an html table
-                    html_table = result_df.to_html(index=False)
-
-                    return render_template('estimates.html', estimates=Markup(html_table), css_style=css_style_markup)
-                else:
-                    return render_template('thankyou.html', css_style=css_style_markup)
-        else:
-            profile['profile_id'] = str(uuid.uuid4()) # Create new profile_id
-            profile = add_to_profile(profile)
-
-            # Modify the tuner to use the participant's current wage
-            current_wage = float(profile['wage'])
-            daily_wage = profile['wage_type'] == '0'
-            wage_design_distribution = create_wage_distribution(current_wage, daily_wage)
-            design_params['wage_a'] = wage_design_distribution
-            design_params['wage_b'] = wage_design_distribution
-            design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
-
-            # Select first design
-            next_design = get_next_design(sample_thetas(theta_params, size_thetas), design_tuner)
-
-            # Add next_design to design history and store placeholder for answer_history
-            profile['design_history'] = [next_design]
-            profile['answer_history'] = []
-
-            # Put item into database
-            table.put_item(Item=float_to_decimal(profile))
-            profile['question_number'] = 'survey'
-            output_design = convert_design(next_design, profile, profile)
-
-            inputs = {'profile_id': profile['profile_id']}
-
-
-            return render_template('survey.html', output_design=output_design, inputs=inputs, question_number=1, nquestions=nquestions, redirect_url='survey', css_style=css_style_markup)
-
 if __name__ == "__main__":
     app.run()

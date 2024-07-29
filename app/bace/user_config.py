@@ -26,15 +26,14 @@ conf_dict = dict(
     # constraint     = constraint
 )
 
-answers      = [0, 1]           # All possible answers that can be observed. Does not have to be binary.
+answers = [0, 1]           # All possible answers that can be observed. Does not have to be binary.
 
 # Preference parameters (theta_params)
 # Dictionary where each preference parameter has a prior distribution specified by a scipy.stats distribution
 # All entries must have a .rvs() and .log_pdf() method
 # See https://docs.scipy.org/doc/scipy/reference/stats.html
 theta_params = dict(
-    WTP_1 = scipy.stats.uniform(0,0.4),
-    WTP_2 = scipy.stats.uniform(0,0.4),
+    WTP = scipy.stats.uniform(0,0.33),
     p = scipy.stats.uniform()
 )
 
@@ -43,10 +42,8 @@ theta_params = dict(
 # See https://github.com/ARM-software/mango#DomainSpace for details on specifying designs
 
 design_params = dict(
-    design_1_a   = ['Yes', 'No'],
-    design_1_b   = ['Yes', 'No'],
-    design_2_a    = ['Yes', 'No'],
-    design_2_b    = ['Yes', 'No'],
+    design_a   = ['Yes', 'No'],
+    design_b    = ['Yes', 'No'],
 )
 
 # Specify likelihood function
@@ -54,14 +51,13 @@ design_params = dict(
 def likelihood_pdf(answer, thetas,
                    # All keys in design_params here
                    wage_a, wage_b,
-                   design_1_a, design_1_b,
-                   design_2_a, design_2_b,
+                   design_a, design_b,
                    ):
 
     
 
-    base_U_a = np.log(wage_a) + thetas['WTP_1'] * (design_1_a == "Yes") + thetas['WTP_2'] * (design_2_a == 'Yes')
-    base_U_b = np.log(wage_b) + thetas['WTP_1'] * (design_1_b == "Yes") + thetas['WTP_2'] * (design_2_b == 'Yes')
+    base_U_a = np.log(wage_a) + thetas['WTP'] * (design_a == "Yes")
+    base_U_b = np.log(wage_b) + thetas['WTP'] * (design_b == "Yes")
 
     base_utility_diff = base_U_b - base_U_a
 
