@@ -3,14 +3,10 @@ import numpy as np
 
 params = [
     'Maternity policy and related benefits',
-    'Full Wages Paid on Time',
-    'Wages Paid via Bank Account',
     'Pension Fund',
     'Health Insurance',
     'Appointment Letter + Pay Slip',
     'Safe Work Environment',
-    'Guaranteed Employment for Entire Month',
-    'Subsidized Canteen'
 ]
 
 # Load translations
@@ -76,17 +72,17 @@ codings = {
 # Add variables to user's `profile` (created when `create_profile` route is called)
 def add_to_profile(profile, **kwargs):
     # example: add timestamp to profile
-    def generate_param_ids(gender):
-        if gender == 0 and np.random.rand() < 0.5:
+    def generate_param_id(gender):
+        if gender == 0:
             param_id = 0
         else:
-            param_id = np.random.randint(1, 9)
+            param_id = np.random.randint(1, 5)
         return param_id
     
     profile['timestamp'] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     gender = int(profile['gender'])
     
-    profile['param_id'] = generate_param_ids(gender)
+    profile['param_id'] = generate_param_id(gender)
 
     profile['param'] = params[profile['param_id']]    
     return profile
@@ -129,6 +125,18 @@ def choice_message(profile, label, wage, design):
     """
     return html_table
 
+def wage_dif(design,profile):
+
+    wage_dif = abs(design['wage_a'] - design['wage_b'])
+    wage_log_dif = abs(np.log(design['wage_a']) - np.log(design['wage_b']))
+    round_log_dif = round(wage_log_dif, 2)
+    
+    if profile['lang'] == '0':
+        return f"₹{wage_dif} ({round_log_dif:.0%})"
+    else:
+        return f"₹{wage_dif} ({round_log_dif:.0%})"    
+
+
 def convert_design(design, profile, request_data, choice_message=choice_message,  **kwargs):
 
     # Number of questions
@@ -139,57 +147,8 @@ def convert_design(design, profile, request_data, choice_message=choice_message,
     output_design[f'message_0_{Q}'] = choice_message(profile, "Job A", design['wage_a'], design['design_a'],)
     output_design[f'message_1_{Q}'] = choice_message(profile,"Job B", design['wage_b'], design['design_b'],)
 
+    output_design[f'wage_dif_{Q}'] = wage_dif(design,profile)
+
     return output_design
 
 
-# def caption(design,profile):
-
-#     # codings_2 = {
-# #     'wage_type' : {
-# #         '0': 'Day',
-# #         '1': 'Week',
-# #         '2': 'Month',
-# #     }
-# # }
-#     wage_diff = design['wage_a'] - design['wage_b']
-#     wage_pct = design['wage_a'] / design['wage_b'] - 1
-#     round_wage_pct = round(wage_pct, 2)
-    
-#     if profile['lang'] == '0':
-#         if wage_diff >= 0:
-#             if design['design_a'] == 'Yes' and design['design_b'] == 'Yes':
-#                 return f"Job A pays ₹{wage_diff} ({round_wage_pct:.0%}) more than Job B per " + codings_2['wage_type'][profile['wage_type']] + ". Both jobs offer a " + params[profile['param_id']] + "."
-#             elif design['design_a'] == 'Yes' and design['design_b'] == 'No':
-#                 return f"Job A pays ₹{wage_diff} ({round_wage_pct:.0%}) more than Job B per " + codings_2['wage_type'][profile['wage_type']] + ". Job A offers a " + params[profile['param_id']] + " while Job B does not."
-#             elif design['design_a'] == 'No' and design['design_b'] == 'Yes':
-#                 return f"Job A pays ₹{wage_diff} ({round_wage_pct:.0%}) more than Job B per " + codings_2['wage_type'][profile['wage_type']] + ". Job A does not offer a " + params[profile['param_id']] + " while Job B does."
-#             else:
-#                 return f"Job A pays ₹{wage_diff} ({round_wage_pct:.0%}) more than Job B per " + codings_2['wage_type'][profile['wage_type']] + ". Both jobs do not offer a " + params[profile['param_id']] + "."
-#         else:
-#             if design['design_a'] == 'Yes' and design['design_b'] == 'Yes':
-#                 return f"Job B pays ₹{-wage_diff} ({-round_wage_pct:.0%}) less than Job A per " + codings_2['wage_type'][profile['wage_type']] + ". Both jobs offer a " + params[profile['param_id']] + "."
-#             elif design['design_a'] == 'Yes' and design['design_b'] == 'No':
-#                 return f"Job B pays ₹{-wage_diff} ({-round_wage_pct:.0%}) less than Job A per " + codings_2['wage_type'][profile['wage_type']] + ". Job A offers a " + params[profile['param_id']] + " while Job B does not."
-#             elif design['design_a'] == 'No' and design['design_b'] == 'Yes':
-#                 return f"Job B pays ₹{-wage_diff} ({-round_wage_pct:.0%}) less than Job A per " + codings_2['wage_type'][profile['wage_type']] + ". Job A does not offer a " + params[profile['param_id']] + " while Job B does."
-#             else:
-#                 return f"Job B pays ₹{-wage_diff} ({-round_wage_pct:.0%}) less than Job A per " + codings_2['wage_type'][profile['wage_type']] + ". Both jobs do not offer a " + params[profile['param_id']] + "."
-#     else:
-#         if wage_diff >= 0:
-#             if design['design_a'] == 'Yes' and design['design_b'] == 'Yes':
-#                 return f"नौकरी A नौकरी B से ₹{wage_diff} ({round_wage_pct:.0%}) अधिक देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". दोनों नौकरियों में " + translations[profile['lang']][params[profile['param_id']]] + " है।"
-#             elif design['design_a'] == 'Yes' and design['design_b'] == 'No':
-#                 return f"नौकरी A नौकरी B से ₹{wage_diff} ({round_wage_pct:.0%}) अधिक देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". नौकरी A में " + translations[profile['lang']][params[profile['param_id']]] + " है जबकि नौकरी B में नहीं है।"
-#             elif design['design_a'] == 'No' and design['design_b'] == 'Yes':
-#                 return f"नौकरी A नौकरी B से ₹{wage_diff} ({round_wage_pct:.0%}) अधिक देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". नौकरी A में " + translations[profile['lang']][params[profile['param_id']]] + " नहीं है जबकि नौकरी B में है।"
-#             else:
-#                 return f"नौकरी A नौकरी B से ₹{wage_diff} ({round_wage_pct:.0%}) अधिक देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". दोनों नौकरियों में " + translations[profile['lang']][params[profile['param_id']]] + " नहीं है।"
-#         else:
-#             if design['design_a'] == 'Yes' and design['design_b'] == 'Yes':
-#                 return f"नौकरी B नौकरी A से ₹{-wage_diff} ({-round_wage_pct:.0%}) कम देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". दोनों नौकरियों में " + translations[profile['lang']][params[profile['param_id']]] + " है।"
-#             elif design['design_a'] == 'Yes' and design['design_b'] == 'No':
-#                 return f"नौकरी B नौकरी A से ₹{-wage_diff} ({-round_wage_pct:.0%}) कम देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". नौकरी A में " + translations[profile['lang']][params[profile['param_id']]] + " है जबकि नौकरी B में नहीं है।"
-#             elif design['design_a'] == 'No' and design['design_b'] == 'Yes':
-#                 return f"नौकरी B नौकरी A से ₹{-wage_diff} ({-round_wage_pct:.0%}) कम देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". नौकरी A में " + translations[profile['lang']][params[profile['param_id']]] + " नहीं है जबकि नौकरी B में है।"
-#             else:
-#                 return f"नौकरी B नौकरी A से ₹{-wage_diff} ({-round_wage_pct:.0%}) कम देती है प्रति " + translations[profile['lang']][codings_2['wage_type'][profile['wage_type']]] + ". दोनों नौकरियों में " + translations[profile['lang']][params[profile['param_id']]] + " नहीं है।"

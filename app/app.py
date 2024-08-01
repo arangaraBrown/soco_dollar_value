@@ -106,8 +106,8 @@ def create_profile():
 
     response = {
         'profile_id': profile.get('profile_id'),
-        'param_id': profile.get('param_id_1'),
-        'param': profile.get('param_1'),
+        'param_id': profile.get('param_id'),
+        'param': profile.get('param'),
         **output_design
     }
 
