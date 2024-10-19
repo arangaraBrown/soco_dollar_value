@@ -56,8 +56,8 @@ objective = get_objective(answers, likelihood_pdf)
 design_tuner = get_design_tuner(design_params, objective, conf_dict_earlystop)
 
 def create_wage_distribution(current_wage, daily_wage):
-        low = current_wage * 0.75
-        high = current_wage * 1.25
+        low = current_wage * 0.5
+        high = current_wage * 1.5
 
         # Define the discrete values (multiples of 100) within the range
         if daily_wage == '0':
@@ -108,6 +108,7 @@ def create_profile():
         'profile_id': profile.get('profile_id'),
         'param_id': profile.get('param_id'),
         'param': profile.get('param'),
+        'param_hi': profile.get('param_hi'),
         **output_design
     }
 

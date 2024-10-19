@@ -7,6 +7,7 @@ params = [
     'Health Insurance',
     'Appointment Letter + Pay Slip',
     'Safe Work Environment',
+    'Wages Paid via Bank Account'
 ]
 
 # Load translations
@@ -76,7 +77,7 @@ def add_to_profile(profile, **kwargs):
         if gender == 0:
             param_id = 0
         else:
-            param_id = np.random.randint(1, 5)
+            param_id = np.random.randint(1, 6)
         return param_id
     
     profile['timestamp'] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -84,7 +85,8 @@ def add_to_profile(profile, **kwargs):
     
     profile['param_id'] = generate_param_id(gender)
 
-    profile['param'] = params[profile['param_id']]    
+    profile['param'] = params[profile['param_id']]  
+    profile['param_hi'] = translations['1'][profile['param']]
     return profile
 
 def choice_message(profile, label, wage, design):

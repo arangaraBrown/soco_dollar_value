@@ -28,7 +28,7 @@ from app.bace.user_config import theta_params, size_thetas, likelihood_pdf
 
 
 # Output file path.
-output_file = "tests.csv"
+output_file = "9_9_24.csv"
 
 
 def clean_designs_and_answers(item, answers):
@@ -74,16 +74,16 @@ table = ddb.Table(table_name)
 response = table.scan()
 db_items = response['Items']
 
-with open('new_profiles.csv', 'r', encoding='utf-8-sig') as file:
-    reader = csv.reader(file, delimiter='\n')
-    profiles_to_test = [row[0] for row in reader]
+# with open('new_profiles.csv', 'r', encoding='utf-8-sig') as file:
+#     reader = csv.reader(file, delimiter='\n')
+#     profiles_to_test = [row[0] for row in reader]
 
 # Go beyond the 1mb limit: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html
 while 'LastEvaluatedKey' in response:
     response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
     db_items.extend(response['Items'])
 
-db_items = [item for item in db_items if item['profile_id'] in profiles_to_test]
+# db_items = [item for item in db_items if item['profile_id'] in profiles_to_test]
 
 import scipy.stats
 import numpy as np
@@ -109,14 +109,13 @@ for item in db_items:
 
 # Assuming pmc, answer_history, design_history, likelihood_pdf, size_thetas are already defined
 
-        def compute_posterior_estimates(i):
-            upper = float(i) / 10
-            theta_params = dict(
-                WTP=scipy.stats.uniform(0, upper),
-                p=scipy.stats.uniform()
-            )
+        def compute_posterior_estimates():
+            # upper = float(i) / 10
 
-            
+            theta_params = dict(
+                WTP = scipy.stats.uniform(),
+                p = scipy.stats.uniform()
+            )
 
             # Compute posterior estimates using Population Monte Carlo
             posterior_thetas = pmc(
@@ -127,15 +126,21 @@ for item in db_items:
                 size_thetas
             )
 
-            # Calculate the mean and median posterior estimate for each parameter.
-            estimates = posterior_thetas.agg(['mean', 'median', 'std']).to_dict()
-            estimates = {str(i) + '_' + key: value for key, value in estimates.items()}
-            return estimates
+            # # Calculate the mean and median posterior estimate for each parameter.
+            # import matplotlib.pyplot as plt
 
-        out = {}
-        for i in range(1, 11):
-            estimates = compute_posterior_estimates(i)
-            out.update(estimates)
+            # # Plot posterior_thetas as a histogram
+            # plt.hist(posterior_thetas, bins=10)
+            # plt.xlabel('Parameter Value')
+            # plt.ylabel('Frequency')
+            # plt.title('Posterior Estimates')
+            # plt.show()
+
+            estimates = posterior_thetas.agg(['mean', 'median', 'std']).to_dict()
+            # estimates = {key: value for key, value in estimates.items()}
+            if 'p.median' in estimates and estimates['p.median'] < 0.5 :
+                return estimates
+            return None
 
                 # Store output.
         # You can add additional variables associated with an item using item.get('var') to the exported csv.
@@ -143,7 +148,7 @@ for item in db_items:
             "profile_id": item.get("profile_id"),
             "n_designs": ND,
             "param": item.get("param"),
-            **out,
+            **compute_posterior_estimates,
         }
 
         output.append(individual_output)
