@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # User Defined Parameters
-p_reject = 0.5
 WTP_max = 0.8
 
 # Get data from Qualtrics API
@@ -22,27 +21,30 @@ output.drop(columns=['n_designs'], inplace=True)
 # merge data
 output = pd.merge(qualtrics_data, output, on='profile_id', how='inner')
 
-# Filter data based user defined parameters
-output = output[output['p.median'] <= p_reject]
+# Filter data based on user defined WTP_max
+initial_count = len(output)
 output = output[output['WTP.median'] <= WTP_max]
+final_count = len(output)
+rejected_count = initial_count - final_count
+print(f"Number of rows rejected: {rejected_count}")
 
 # Save output to csv
 output.to_csv('output.csv', index=False)
 
-# Plot Histogram of WTP estimates
+# # Plot Histogram of WTP estimates
 plt.hist(output['WTP.median'], bins=10)
 plt.xlabel('WTP')
 plt.ylabel('Frequency')
 plt.title('Histogram of WTP Estimates')
 plt.show()
 
-# Plot Histogram of WTP estimates for each benefit
-for group in output.groupby('param'):
-    plt.hist(group[1]['WTP.median'], bins=10)
-    plt.xlabel('WTP')
-    plt.ylabel('Frequency')
-    plt.title(f'Histogram of WTP Estimates for {group[0]}')
-    plt.show()
+# # Plot Histogram of WTP estimates for each benefit
+# for group in output.groupby('param'):
+#     plt.hist(group[1]['WTP.median'], bins=10)
+#     plt.xlabel('WTP')
+#     plt.ylabel('Frequency')
+#     plt.title(f'Histogram of WTP Estimates for {group[0]}')
+#     plt.show()
 
 
 
