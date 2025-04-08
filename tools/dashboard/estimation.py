@@ -2,8 +2,11 @@
 from app.database.db import table, decimal_to_float
 from app.bace.pmc_inference import pmc
 from app.bace.user_config import answers
-from app.bace.user_config import theta_params, size_thetas, likelihood_pdf
+from app.bace.user_config import theta_params, size_thetas
 import pandas as pd
+import scipy.stats as st
+import numpy as np
+
 
 def clean_designs_and_answers(item, answers):
 
@@ -41,6 +44,76 @@ def post_estimate(db_items,upper):
         design_history, answer_history = clean_designs_and_answers(item, answers)
         ND = len(design_history)
 
+        def la_likelihood_pdf(answer, thetas,
+                   # All keys in design_params here
+                   wage_a, wage_b,
+                   design_a, design_b,
+                   ):
+            
+            # loss aversion utility model
+            def utility(current_wage, design_wage, design_amenity):
+                if (design_wage >= current_wage):
+                    u = np.log(design_wage) + thetas['WTP_la'] * (design_amenity == "Yes")
+                else:
+                    u  = np.log(current_wage) - np.log(current_wage - design_wage)*thetas['alpha_la'] + thetas['WTP_la'] * (design_amenity == "Yes")
+                return u
+            
+            current_wage = float(item['wage'])
+            base_U_a = utility(current_wage,wage_a,design_a)
+            base_U_b = utility(current_wage,wage_b,design_b)
+            
+            base_utility_diff = base_U_b - base_U_a
+
+            # Logit likelihood of choosing B over A with scale parameter thetas['mu']
+            # likelihood = 1 / (1 + np.exp(-1 * thetas['mu'] * base_utility_diff))
+
+            # eps = 1e-10
+            # likelihood[likelihood < eps] = eps
+            # likelihood[likelihood > (1 - eps)] = 1 - eps
+
+            # Binomial Likelihood from paper
+            likelihood = (1-thetas['p_la'])*(base_utility_diff>0) + thetas['p_la']/2
+
+            # Produce a likelihood associated with each possible answer choice
+            # (account for the fact that answer inputs through the API may be in string format)
+            if str(answer) == '1':
+                # choose B
+                return likelihood
+            else:
+                # choose A
+                return 1 - likelihood
+            
+        def likelihood_pdf(answer, thetas,
+                   # All keys in design_params here
+                   wage_a, wage_b,
+                   design_a, design_b,
+                   ):
+            
+            base_U_a = np.log(wage_a) + thetas['WTP'] * (design_a == "Yes")
+            base_U_b = np.log(wage_b) + thetas['WTP'] * (design_b == "Yes")
+            
+            base_utility_diff = base_U_b - base_U_a
+
+            # Logit likelihood of choosing B over A with scale parameter thetas['mu']
+            # likelihood = 1 / (1 + np.exp(-1 * thetas['mu'] * base_utility_diff))
+
+            # eps = 1e-10
+            # likelihood[likelihood < eps] = eps
+            # likelihood[likelihood > (1 - eps)] = 1 - eps
+
+            # Binomial Likelihood from paper
+            likelihood = (1-thetas['p'])*(base_utility_diff>0) + thetas['p']/2
+
+            # Produce a likelihood associated with each possible answer choice
+            # (account for the fact that answer inputs through the API may be in string format)
+            if str(answer) == '1':
+                # choose B
+                return likelihood
+            else:
+                # choose A
+                return 1 - likelihood
+
+
         # Estimate preferences if the individual answered at least one question.
         if ND > 0:
 
@@ -52,23 +125,40 @@ def post_estimate(db_items,upper):
 
     # Assuming pmc, answer_history, design_history, likelihood_pdf, size_thetas are already defined
 
-            def compute_posterior_estimates(i):
-                
-                theta_params = dict(
-                    WTP = scipy.stats.uniform(0, i),
-                    p = scipy.stats.uniform()
-                )
+            def compute_posterior_estimates(i,la):
+                if la:
+                    theta_params = dict(
+                        WTP_la = scipy.stats.uniform(0, i),
+                        alpha_la = scipy.stats.uniform(0,2),
+                        p_la = scipy.stats.uniform()
+                    )
 
-                # Compute posterior estimates using Population Monte Carlo
-                posterior_thetas = pmc(
-                    theta_params,
-                    answer_history,
-                    design_history,
-                    likelihood_pdf,
-                    size_thetas
-                )
+                    # Compute posterior estimates using Population Monte Carlo
+                    posterior_thetas = pmc(
+                        theta_params,
+                        answer_history,
+                        design_history,
+                        la_likelihood_pdf,
+                        size_thetas
+                    )
+                else:
+                    theta_params = dict(
+                        WTP = scipy.stats.uniform(0, i),
+                        p = scipy.stats.uniform()
+                    )
 
-                estimates = posterior_thetas.agg(['mean', 'median', 'std']).to_dict()
+                    # Compute posterior estimates using Population Monte Carlo
+                    posterior_thetas = pmc(
+                        theta_params,
+                        answer_history,
+                        design_history,
+                        likelihood_pdf,
+                        size_thetas
+                    )
+                if la:
+                    estimates = posterior_thetas[['WTP_la','p_la','alpha_la']].agg(['mean','std']).to_dict()
+                else:
+                    estimates = posterior_thetas[['WTP','p',]].agg(['mean','std']).to_dict()
                 return estimates
 
             # You can add additional variables associated with an item using item.get('var') to the exported csv.
@@ -76,7 +166,8 @@ def post_estimate(db_items,upper):
                 "profile_id": item.get("profile_id"),
                 "n_designs": ND,
                 "param": item.get("param"),
-                **compute_posterior_estimates(upper),
+                **compute_posterior_estimates(upper,False),
+                **compute_posterior_estimates(upper,True),
             }
 
             output.append(individual_output)

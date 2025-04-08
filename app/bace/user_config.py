@@ -2,7 +2,7 @@
 import scipy.stats
 import numpy as np
 
-author       = 'Ari Dev Rangarajan' # Your name here
+author       = 'Ari Dev Rangarajan & Sneha Nawage' # Your name here
 size_thetas  = 2500                      # Size of sample drawn from prior distribution over preference parameters.
 max_opt_time = 5                         # Stop Bayesian Optimization process after max_opt_time seconds and return best design.
 
